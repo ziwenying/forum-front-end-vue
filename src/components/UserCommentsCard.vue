@@ -36,7 +36,6 @@ export default {
   methods: {
     fetchComments() {
       this.comments = this.profile.Comments;
-      console.log(this.comments);
     },
   },
 };

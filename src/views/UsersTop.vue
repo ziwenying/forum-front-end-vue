@@ -37,53 +37,8 @@
 
 <script>
 import NavTabs from "./../components/NavTabs.vue";
-
-const dummyData = {
-  users: [
-    {
-      id: 1,
-      name: "root",
-      email: "root@example.com",
-      password: "$2a$10$mnvbkPzs2c29EEhgYJRLdOmutjcjLVYFhGQg5Lt1R8DPTD9as5Gsi",
-      isAdmin: true,
-      image:
-        "https://stickershop.line-scdn.net/stickershop/v1/sticker/392330767/android/sticker.png",
-      createdAt: "2022-07-04T00:55:09.000Z",
-      updatedAt: "2022-07-04T00:55:09.000Z",
-      Followers: [],
-      FollowerCount: 0,
-      isFollowed: false,
-    },
-    {
-      id: 2,
-      name: "user1",
-      email: "user1@example.com",
-      password: "$2a$10$Pk1gxJ1B2IbjSGm2aFW0IO.aKHzzdm9HtjU0CsYqsnV7BIV7z7FRC",
-      isAdmin: false,
-      image:
-        "https://stickershop.line-scdn.net/stickershop/v1/sticker/392330768/android/sticker.png",
-      createdAt: "2022-07-04T00:55:09.000Z",
-      updatedAt: "2022-07-04T00:55:09.000Z",
-      Followers: [],
-      FollowerCount: 0,
-      isFollowed: false,
-    },
-    {
-      id: 3,
-      name: "user2",
-      email: "user2@example.com",
-      password: "$2a$10$3ZhJowb82ehqktuOG3O7UOHqFjlmzSFDjbkr5x.xPjwL72L6gfzeO",
-      isAdmin: false,
-      image:
-        "https://stickershop.line-scdn.net/stickershop/v1/sticker/392330766/android/sticker.png",
-      createdAt: "2022-07-04T00:55:09.000Z",
-      updatedAt: "2022-07-04T00:55:09.000Z",
-      Followers: [],
-      FollowerCount: 0,
-      isFollowed: false,
-    },
-  ],
-};
+import usersAPI from "./../apis/users";
+import { Toast } from "./../utils/helpers";
 
 export default {
   name: "UsersTop",
@@ -99,37 +54,75 @@ export default {
     this.fetchUsers();
   },
   methods: {
-    fetchUsers() {
-      const { users } = dummyData;
-      this.users = users;
-    },
-    addFollowed(userId) {
-      const addTheUser = () => {
-        this.users = this.users.map((user) => {
-          return userId === user.id
-            ? {
-                ...user,
-                FollowerCount: user.FollowerCount + 1,
-                isFollowed: true,
-              }
-            : user;
+    async fetchUsers() {
+      try {
+        const response = await usersAPI.getTopUsers();
+        // 檢測
+        if (response.statusText !== "OK") {
+          throw new Error("無法載入美食達人頁面，請稍後再試");
+        }
+        this.users = response.data.users;
+      } catch (error) {
+        Toast.fire({
+          icon: "error",
+          title: "無法載入美食達人頁面，請稍後再試",
         });
-      };
-      addTheUser();
+      }
     },
-    deleteFollowed(userId) {
-      const deleteTheUser = () => {
-        this.users = this.users.map((user) => {
-          return userId === user.id
-            ? {
-                ...user,
-                FollowerCount: user.FollowerCount - 1,
-                isFollowed: false,
-              }
-            : user;
+    async addFollowed(userId) {
+      try {
+        const data = await usersAPI.addFollowing({ userId });
+        // 檢測
+        if (data.statusText !== "OK") {
+          throw new Error("無法追蹤此美食達人，請稍後再試");
+        }
+        // 追蹤
+        const addTheUser = () => {
+          this.users = this.users.map((user) => {
+            return userId === user.id
+              ? {
+                  ...user,
+                  FollowerCount: user.FollowerCount + 1,
+                  isFollowed: true,
+                }
+              : user;
+          });
+        };
+        addTheUser();
+      } catch (error) {
+        Toast.fire({
+          icon: "error",
+          title: "無法追蹤此美食達人，請稍後再試",
         });
-      };
-      deleteTheUser();
+      }
+    },
+    async deleteFollowed(userId) {
+      try {
+        const data = await usersAPI.deleteFollowing({ userId });
+        console.log(data);
+        // 檢測
+        if (data.statusText !== "OK") {
+          throw new Error("無法追蹤此美食達人，請稍後再試");
+        }
+        // 取消追蹤
+        const deleteTheUser = () => {
+          this.users = this.users.map((user) => {
+            return userId === user.id
+              ? {
+                  ...user,
+                  FollowerCount: user.FollowerCount - 1,
+                  isFollowed: false,
+                }
+              : user;
+          });
+        };
+        deleteTheUser();
+      } catch (error) {
+        Toast.fire({
+          icon: "error",
+          title: "無法取消追蹤，請稍後再試",
+        });
+      }
     },
   },
 };

@@ -62,8 +62,12 @@
         />
       </div>
 
-      <button class="btn btn-lg btn-primary btn-block mb-3" type="submit">
-        Submit
+      <button
+        class="btn btn-lg btn-primary btn-block mb-3"
+        type="submit"
+        :disabled="isProcessing === true"
+      >
+        {{ isProcessing ? "處理中" : "Submit" }}
       </button>
 
       <div class="text-center mb-3">
@@ -78,6 +82,9 @@
 </template>
 
 <script>
+import authorizationAPI from "./../apis/authorization";
+import { Toast } from "./../utils/helpers";
+
 export default {
   name: "SingUp",
   data() {
@@ -86,19 +93,61 @@ export default {
       email: "",
       password: "",
       passwordCheck: "",
+      isProcessing: false,
     };
   },
   methods: {
-    handleSubmit() {
-      const data = JSON.stringify({
-        name: this.name,
-        email: this.email,
-        password: this.password,
-        passwordCheck: this.passwordCheck,
-      });
+    async handleSubmit() {
+      try {
+        // 變成處理中
+        this.isProcessing = true;
 
-      // TODO: 向後端驗證使用者登入資訊是否合法
-      console.log("data", data);
+        //註冊輸入的資料
+        const formData = {
+          name: this.name,
+          email: this.email,
+          password: this.password,
+          passwordCheck: this.passwordCheck,
+        };
+
+        // 檢驗 1
+        if (
+          !this.name ||
+          !this.email ||
+          !this.password ||
+          !this.passwordCheck
+        ) {
+          this.isProcessing = false;
+          Toast.fire({
+            icon: "warning",
+            title: "請輸入完整資料",
+          });
+          return;
+        } else if (this.password !== this.passwordCheck) {
+          this.isProcessing = false;
+          Toast.fire({
+            icon: "warning",
+            title: "請輸入相同密碼",
+          });
+          return;
+        }
+
+        const { data } = await authorizationAPI.create({ formData });
+
+        // 檢驗 2
+        if (data.status !== "success") {
+          throw new Error(data.message);
+        }
+        //成功轉址到 `/restaurants`
+        this.$router.push({ name: "restaurants" });
+      } catch (error) {
+        this.isProcessing = false;
+        console.log(error);
+        Toast.fire({
+          icon: "error",
+          title: "註冊失敗，請稍後再試",
+        });
+      }
     },
   },
 };
