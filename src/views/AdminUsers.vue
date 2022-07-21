@@ -34,53 +34,9 @@
 
 <script>
 import AdminNav from "./../components/AdminNav.vue";
-// import { v4 as uuidv4 } from "uuid";
-
-const dummyData = {
-  users: [
-    {
-      id: 1,
-      name: "root",
-      email: "root@example.com",
-      password: "$2a$10$mnvbkPzs2c29EEhgYJRLdOmutjcjLVYFhGQg5Lt1R8DPTD9as5Gsi",
-      isAdmin: true,
-      image: null,
-      createdAt: "2022-07-04T00:55:09.000Z",
-      updatedAt: "2022-07-04T00:55:09.000Z",
-    },
-    {
-      id: 2,
-      name: "user1",
-      email: "user1@example.com",
-      password: "$2a$10$Pk1gxJ1B2IbjSGm2aFW0IO.aKHzzdm9HtjU0CsYqsnV7BIV7z7FRC",
-      isAdmin: false,
-      image: null,
-      createdAt: "2022-07-04T00:55:09.000Z",
-      updatedAt: "2022-07-04T00:55:09.000Z",
-    },
-    {
-      id: 3,
-      name: "user2",
-      email: "user2@example.com",
-      password: "$2a$10$3ZhJowb82ehqktuOG3O7UOHqFjlmzSFDjbkr5x.xPjwL72L6gfzeO",
-      isAdmin: false,
-      image: null,
-      createdAt: "2022-07-04T00:55:09.000Z",
-      updatedAt: "2022-07-04T00:55:09.000Z",
-    },
-  ],
-};
-
-const dummyUser = {
-  id: 1,
-  name: "root",
-  email: "root@example.com",
-  password: "$2a$10$mnvbkPzs2c29EEhgYJRLdOmutjcjLVYFhGQg5Lt1R8DPTD9as5Gsi",
-  isAdmin: true,
-  image: null,
-  createdAt: "2022-07-04T00:55:09.000Z",
-  updatedAt: "2022-07-04T00:55:09.000Z",
-};
+import { mapState } from "vuex";
+import adminAPI from "./../apis/admin";
+import { Toast } from "./../utils/helpers";
 
 export default {
   name: "AdminUsers",
@@ -90,27 +46,64 @@ export default {
   data() {
     return {
       users: [],
-      currentUser: {},
     };
   },
   created() {
     this.fetchUsers();
   },
+  computed: {
+    ...mapState(["currentUser"]),
+  },
   methods: {
-    fetchUsers() {
-      this.currentUser = dummyUser;
+    async fetchUsers() {
+      try {
+        const response = await adminAPI.users.get();
 
-      this.users = dummyData.users;
+        // 檢驗
+        if (response.statusText !== "OK") {
+          throw new Error("無法取得使用者資料，請稍後再試");
+        }
+
+        const data = response.data;
+        this.users = data.users;
+
+        console.log(response.data);
+      } catch (error) {
+        console.log(error);
+        Toast.fire({
+          icon: "error",
+          title: "無法取得使用者資料，請稍後再試",
+        });
+      }
     },
-    changeRole({ userId, isAdmin }) {
-      this.users = this.users.map((user) => {
-        return user.id === userId
-          ? {
-              ...user,
-              isAdmin: !isAdmin,
-            }
-          : user;
-      });
+    async changeRole({ userId, isAdmin }) {
+      try {
+        const { data } = await adminAPI.users.update({
+          userId,
+          // boolean 記得要轉字串，不然會是 false
+          isAdmin: (!isAdmin).toString(),
+        });
+        // 檢驗
+        if (data.status !== "success") {
+          throw new Error(data.message);
+        }
+
+        this.users = this.users.map((user) => {
+          return user.id === userId
+            ? {
+                ...user,
+                isAdmin: !isAdmin,
+              }
+            : user;
+        });
+        console.log(this.users);
+      } catch (error) {
+        console.log(error);
+        Toast.fire({
+          icon: "error",
+          title: "無法更改使用者權限，請稍後再試",
+        });
+      }
     },
   },
 };

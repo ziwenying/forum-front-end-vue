@@ -36,11 +36,8 @@ export default {
         if (data.status !== "success") {
           throw new Error(data.message);
         }
-
         //成功轉址到 `/admin/restaurants`
         this.$router.push({ name: "admin-restaurants" });
-
-        console.log(data);
       } catch (error) {
         this.isProcessing = false;
         console.log(error);

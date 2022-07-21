@@ -1,28 +1,48 @@
 <template>
   <div class="card">
     <div class="card-header">
-      <strong>{{ comments.length }}</strong> 已評論餐廳
+      <strong>{{ profile.commentsLength }}</strong> 已評論餐廳
     </div>
     <div class="card-body">
-      <a href="/restaurants/2" v-for="comment in comments" :key="comment.id">
+      <router-link
+        :to="{ name: 'restaurant', params: comments.RestaurantId }"
+        v-for="comment in comments"
+        :key="comment.id"
+      >
         <img
-          :src="comment.Restaurant.image"
+          :src="comment.Restaurant.image | emptyImage"
           width="60"
           height="60"
-          class="avatar"
+          class="avatar mr-1 mb-1"
         />
-      </a>
+      </router-link>
     </div>
   </div>
 </template>
 
 <script>
+import { emptyImageFilter } from "./../utils/mixins";
+
 export default {
   name: "UserCommentsCard",
+  mixins: [emptyImageFilter],
   props: {
     profile: {
       type: Object,
-      required: true,
+      default: () => ({
+        id: -1,
+        image: "null",
+        name: "",
+        email: "",
+        comments: [],
+        FavoritedRestaurants: [],
+        Followers: [],
+        Followings: [],
+        followingsLength: 0,
+        followersLength: 0,
+        commentsLength: 0,
+        favoritedRestaurantsLength: 0,
+      }),
     },
   },
   data() {
@@ -30,12 +50,17 @@ export default {
       comments: [],
     };
   },
+  watch: {
+    profile() {
+      this.fetchComments();
+    },
+  },
   created() {
     this.fetchComments();
   },
   methods: {
     fetchComments() {
-      this.comments = this.profile.Comments;
+      this.comments = this.profile.comments;
     },
   },
 };
