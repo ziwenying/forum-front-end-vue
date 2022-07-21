@@ -14,7 +14,8 @@
 </template>
 
 <script>
-import { v4 as uuidv4 } from "uuid";
+import commentsAPI from "./../apis/comments";
+import { Toast } from "./../utils/helpers";
 
 export default {
   name: "CreateComment",
@@ -30,16 +31,40 @@ export default {
     };
   },
   methods: {
-    handleSubmit() {
-      // TODO: 向 API 發送 POST 請求
-      // 伺服器新增 Comment 成功後...
-      console.log(uuidv4(), this.restaurantId, this.text);
-      this.$emit("after-create-comment", {
-        commentId: uuidv4(), // 尚未串接 API 暫時使用隨機的 id
-        restaurantId: this.restaurantId,
-        text: this.text,
-      });
-      this.text = ""; // 將表單內的資料清空
+    async handleSubmit() {
+      try {
+        if (!this.text) {
+          Toast.fire({
+            icon: "warning",
+            title: "請輸入留言",
+          });
+          throw new Error("請輸入留言");
+        }
+
+        const response = await commentsAPI.create({
+          restaurantId: this.restaurantId,
+          text: this.text,
+        });
+
+        // 檢驗
+        if (response.data.status !== "success") {
+          throw new Error(response.data);
+        }
+
+        const data = response.data;
+        this.$emit("after-create-comment", {
+          commentId: data.commentId,
+          restaurantId: this.restaurantId,
+          text: this.text,
+        });
+        this.text = ""; // 將表單內的資料清空
+      } catch (error) {
+        console.log(error);
+        Toast.fire({
+          icon: "error",
+          title: "無法新增留言，請稍後再試",
+        });
+      }
     },
   },
 };

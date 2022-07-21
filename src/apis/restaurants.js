@@ -2,6 +2,12 @@ import { apiHelper } from './../utils/helpers'
 const getToken = () => localStorage.getItem('token')
 
 export default {
+  getRestaurant({ restaurantId }) {
+    return apiHelper.get(`/restaurants/${restaurantId}`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    })
+  },
+  // s
   getRestaurants({ page, categoryId }) {
     // JavaScript 原生 URLSearchParams() 方法
     // URLSearchParams() 為物件建構子，在使用時要用 new 的方式來產生實例，再透過 URLSearchParams.toString() 來產生 queryString。
@@ -28,56 +34,4 @@ export default {
       }
     })
   },
-
-
-  //
 }
-
-
-//
-/*
-created() {
-  const { page = '', categoryId = '' } = this.$route.query
-  this.fetchRestaurants({ queryPage: page, queryCategoryId: categoryId })
-},
-beforeRouteUpdate(to, from, next) {
-  const { page = '', categoryId = '' } = to.query
-  this.fetchRestaurants({ queryPage: page, queryCategoryId: categoryId })
-  next()
-},
-methods: {
-    async fetchRestaurants({ queryPage, queryCategoryId }) {
-    try {
-      const response = await restaurantsAPI.getRestaurants({
-        page: queryPage,
-        categoryId: queryCategoryId
-      })
-
-      const {
-        restaurants,
-        categories,
-        categoryId,
-        page,
-        totalPage,
-        prev,
-        next
-      } = response.data
-
-      this.restaurants = restaurants
-      this.categories = categories
-      this.categoryId = categoryId
-      this.currentPage = page
-      this.totalPage = totalPage
-      this.previousPage = prev
-      this.nextPage = next
-    } catch (error) {
-      console.log('error', error)
-      Toast.fire({
-        icon: 'error',
-        title: '無法取得餐廳資料，請稍後再試'
-      })
-    }
-  }
-}
-
-*/

@@ -97,6 +97,10 @@ export default {
 
         // 將 response 中的 token 存放在 localStorage 內
         localStorage.setItem("token", data.token);
+        // data.user 為 response 裡面的資料。
+        // 將被 data.user 更新過的資料傳給 Vuex，並存在 state 裡。
+        this.$store.commit("setCurrentUser", data.user);
+
         // 成功登入後轉址到餐廳首頁
         // 因為成功登入就會轉址，所以不用還原 isProcessing 的狀態
         this.$router.push("/restaurants");

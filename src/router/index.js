@@ -5,6 +5,8 @@ import NotFound from '../views/NotFound.vue'
 import SignIn from '../views/SignIn.vue'
 import Restaurants from '../views/Restaurants.vue'
 
+import store from './../store'
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -42,8 +44,8 @@ const routes = [
     component: () => import('../views/RestaurantsTop.vue')
   },
   {
-    path: '/restaurants/:id',
-    name: 'dashboard',
+    path: '/restaurants/:id/dashboard',
+    name: 'restaurant-dashboard',
     component: () => import('../views/RestaurantDashboard.vue')
   },
   {
@@ -113,6 +115,14 @@ const router = new VueRouter({
   // 透過設定 linkExactActiveClass 屬性，就可以加上你希望的 class 名稱，這邊加 .active
   linkExactActiveClass: 'active',
   routes
+})
+
+// 監聽"全域"的「切換路由」事件
+router.beforeEach((to, from, next) => {
+  // 使用 dispatch 呼叫 Vuex 內的 actions
+  // 路由收到 request 之後，dispatch (指派)其他元件執行特定工作
+  store.dispatch('fetchCurrentUser')
+  next()
 })
 
 export default router

@@ -46,43 +46,14 @@
 </template>
 
 <script>
-const dummyUser = {
-  currentUser: {
-    id: 1,
-    name: "管理者",
-    email: "root@example.com",
-    image: "https://i.pravatar.cc/300",
-    isAdmin: true,
-  },
-  isAuthenticated: true,
-};
+import { mapState } from "vuex";
 
 export default {
   name: "Navbar",
-  // Vue 會在沒有資料時使用此預設值
-  data() {
-    return {
-      currentUser: {
-        id: -1,
-        name: "",
-        email: "",
-        image: "",
-        isAdmin: false,
-      },
-      isAuthenticated: false,
-    };
-  },
-  created() {
-    this.fetchUser();
-  },
-  methods: {
-    fetchUser() {
-      this.currentUser = {
-        ...this.currentUser,
-        ...dummyUser.currentUser,
-      };
-      this.isAuthenticated = dummyUser.isAuthenticated;
-    },
+
+  // 要取用 Vuex 中的資料，使用 **mapState** 方法，搭配 Vue 的 computed 屬性。這邊使用 currentUser 和 isAuthenticated 這兩筆資料
+  computed: {
+    ...mapState(["currentUser", "isAuthenticated"]),
   },
 };
 </script>
