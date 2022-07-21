@@ -36,8 +36,5 @@ export default {
       required: true,
     },
   },
-  created() {
-    console.log(111, this.comments);
-  },
 };
 </script>

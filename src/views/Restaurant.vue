@@ -24,95 +24,9 @@ import RestaurantDetail from "./../components/RestaurantDetail.vue";
 import RestaurantComments from "./../components/RestaurantComments.vue";
 import CreateComment from "./../components/CreateComment .vue";
 
-const dummyData = {
-  restaurant: {
-    id: 2,
-    name: "Miss Eleazar Goodwin",
-    tel: "407-096-6842 x8730",
-    address: "813 Ankunding Forges",
-    opening_hours: "08:00",
-    description: "omnis",
-    image:
-      "https://loremflickr.com/320/240/restaurant,food/?random=66.29550100784051",
-    viewCounts: 0,
-    createdAt: "2022-07-04T00:55:09.000Z",
-    updatedAt: "2022-07-04T00:55:09.000Z",
-    CategoryId: 1,
-    Category: {
-      id: 1,
-      name: "中式料理",
-      createdAt: "2022-07-04T00:55:09.000Z",
-      updatedAt: "2022-07-04T00:55:09.000Z",
-    },
-    Comments: [
-      {
-        id: 102,
-        text: "Modi et possimus consequatur mollitia earum.",
-        UserId: 1,
-        RestaurantId: 2,
-        createdAt: "2022-07-04T00:55:09.000Z",
-        updatedAt: "2022-07-04T00:55:09.000Z",
-        User: {
-          id: 1,
-          name: "root",
-          email: "root@example.com",
-          password:
-            "$2a$10$mnvbkPzs2c29EEhgYJRLdOmutjcjLVYFhGQg5Lt1R8DPTD9as5Gsi",
-          isAdmin: true,
-          image: null,
-          createdAt: "2022-07-04T00:55:09.000Z",
-          updatedAt: "2022-07-04T00:55:09.000Z",
-        },
-      },
-      {
-        id: 2,
-        text: "In et error eius ut neque.",
-        UserId: 3,
-        RestaurantId: 2,
-        createdAt: "2022-07-04T00:55:09.000Z",
-        updatedAt: "2022-07-04T00:55:09.000Z",
-        User: {
-          id: 3,
-          name: "user2",
-          email: "user2@example.com",
-          password:
-            "$2a$10$3ZhJowb82ehqktuOG3O7UOHqFjlmzSFDjbkr5x.xPjwL72L6gfzeO",
-          isAdmin: false,
-          image: null,
-          createdAt: "2022-07-04T00:55:09.000Z",
-          updatedAt: "2022-07-04T00:55:09.000Z",
-        },
-      },
-      {
-        id: 52,
-        text: "Itaque quo impedit nesciunt aut ipsum ipsa.",
-        UserId: 3,
-        RestaurantId: 2,
-        createdAt: "2022-07-04T00:55:09.000Z",
-        updatedAt: "2022-07-04T00:55:09.000Z",
-        User: {
-          id: 3,
-          name: "user2",
-          email: "user2@example.com",
-          password:
-            "$2a$10$3ZhJowb82ehqktuOG3O7UOHqFjlmzSFDjbkr5x.xPjwL72L6gfzeO",
-          isAdmin: false,
-          image: null,
-          createdAt: "2022-07-04T00:55:09.000Z",
-          updatedAt: "2022-07-04T00:55:09.000Z",
-        },
-      },
-    ],
-  },
-  currentUser: {
-    id: 1,
-    name: "管理者",
-    email: "root@example.com",
-    image: "https://i.pravatar.cc/300",
-    isAdmin: true,
-  },
-  isAuthenticated: true,
-};
+import restaurantsAPI from "./../apis/restaurants";
+import { Toast } from "./../utils/helpers";
+import { mapState } from "vuex";
 
 export default {
   name: "Restaurant",
@@ -137,32 +51,53 @@ export default {
         isLiked: false,
       },
       restaurantComments: [],
-      currentUser: dummyData.currentUser,
     };
+  },
+  computed: {
+    ...mapState(["currentUser"]),
+  },
+  // 直接改變路由取得正確的單一餐廳資料
+  beforeRouteUpdate(to, from, next) {
+    const { id } = to.params;
+    this.fetchRestaurant(id);
+    next();
   },
   created() {
     // 透過路由取得要顯示的餐廳 Id
-    const { id: restaurantId } = this.$route.params;
-    this.fetchRestaurant(restaurantId);
+    const { id } = this.$route.params;
+    this.fetchRestaurant(id);
   },
   methods: {
-    fetchRestaurant(restaurantId) {
-      console.log("fetchRestaurant id: ", restaurantId);
+    async fetchRestaurant(restaurantId) {
+      try {
+        const response = await restaurantsAPI.getRestaurant({ restaurantId });
 
-      this.restaurant = {
-        id: dummyData.restaurant.id,
-        name: dummyData.restaurant.name,
-        tel: dummyData.restaurant.tel,
-        address: dummyData.restaurant.address,
-        openingHours: dummyData.restaurant.opening_hours,
-        description: dummyData.restaurant.description,
-        categoryName: dummyData.restaurant.Category.name,
-        image: dummyData.restaurant.image,
-        isFavorited: dummyData.isFavorited,
-        isLiked: dummyData.isLiked,
-      };
+        // 檢驗
+        if (response.statusText !== "OK") {
+          throw new Error("無法取得餐廳資料，請稍後再試");
+        }
 
-      this.restaurantComments = dummyData.restaurant.Comments;
+        const data = response.data;
+
+        this.restaurant = {
+          id: data.restaurant.id,
+          name: data.restaurant.name,
+          tel: data.restaurant.tel,
+          address: data.restaurant.address,
+          openingHours: data.restaurant.opening_hours,
+          description: data.restaurant.description,
+          categoryName: data.restaurant.Category.name,
+          image: data.restaurant.image,
+          isFavorited: data.isFavorited,
+          isLiked: data.isLiked,
+        };
+        this.restaurantComments = data.restaurant.Comments;
+      } catch (error) {
+        Toast.fire({
+          icon: "error",
+          title: "無法取得餐廳資料，請稍後再試",
+        });
+      }
     },
     afterDeleteComment(commentId) {
       // 以 filter 保留未被選擇的 comment.id
@@ -186,7 +121,6 @@ export default {
         // 直接抓當下的時間
         createdAt: new Date(),
       });
-      console.log("restaurantComments", this.restaurantComments);
     },
   },
 };

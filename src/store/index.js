@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
+import usersAPI from './../apis/users'
+
 Vue.use(Vuex)
 
 export default new Vuex.Store({
@@ -20,6 +22,8 @@ export default new Vuex.Store({
   getters: {
   },
   mutations: {
+    // 對照 SignIn.vue 檔案看，其傳入了 state 物件和 data.user，此時的 state 物件是預設值，需要使用 data.user 來覆蓋。
+    // 最終修改好的資料會被保存在 state 裡。
     setCurrentUser(state, currentUser) {
       state.currentUser = {
         ...state.currentUser,
@@ -30,7 +34,26 @@ export default new Vuex.Store({
       state.isAuthenticated = true
     }
   },
+  // 路由設定檔中的 beforeEach() 來呼叫 actions 裡面的非同步函式 
   actions: {
+    // 在 actions 中可以透過參數的方式取得 commit 的方法
+    async fetchCurrentUser({ commit }) {
+      try {
+        const { data } = await usersAPI.getCurrentUser()
+
+        const { id, name, email, image, isAdmin } = data
+
+        commit('setCurrentUser', {
+          id,
+          name,
+          email,
+          image,
+          isAdmin
+        })
+      } catch (error) {
+        console.error(error.message)
+      }
+    }
   },
   modules: {
   }

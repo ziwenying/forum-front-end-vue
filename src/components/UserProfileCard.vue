@@ -23,8 +23,10 @@
           </li>
         </ul>
         <p>
-          <a href="/users/1/edit"
-            ><button type="submit" class="btn btn-primary">edit</button></a
+          <router-link :to="{ name: 'user-edit', params: { id: profile.id } }"
+            ><button type="submit" class="btn btn-primary">
+              edit
+            </button></router-link
           >
         </p>
       </div>

@@ -1,17 +1,16 @@
 <template>
   <div class="container py-5">
-    <NavTabs />
     <div>
       <h1>{{ restaurant.name }}</h1>
       <span class="badge badge-secondary mt-1 mb-3">
-        {{ restaurant.Category.name }}
+        {{ restaurant.categoryName }}
       </span>
     </div>
 
     <hr />
 
     <ul>
-      <li>評論數： {{ restaurant.Comments.length }}</li>
+      <li>評論數： {{ restaurant.commentsLength }}</li>
       <li>瀏覽次數： {{ restaurant.viewCounts }}</li>
     </ul>
 
@@ -22,106 +21,59 @@
 </template>
 
 <script>
-import NavTabs from "./../components/NavTabs";
-
-const dummyData = {
-  restaurant: {
-    id: 2,
-    name: "Miss Eleazar Goodwin",
-    tel: "407-096-6842 x8730",
-    address: "813 Ankunding Forges",
-    opening_hours: "08:00",
-    description: "omnis",
-    image:
-      "https://loremflickr.com/320/240/restaurant,food/?random=66.29550100784051",
-    viewCounts: 0,
-    createdAt: "2022-07-04T00:55:09.000Z",
-    updatedAt: "2022-07-04T00:55:09.000Z",
-    CategoryId: 1,
-    Category: {
-      id: 1,
-      name: "中式料理",
-      createdAt: "2022-07-04T00:55:09.000Z",
-      updatedAt: "2022-07-04T00:55:09.000Z",
-    },
-    Comments: [
-      {
-        id: 102,
-        text: "Modi et possimus consequatur mollitia earum.",
-        UserId: 1,
-        RestaurantId: 2,
-        createdAt: "2022-07-04T00:55:09.000Z",
-        updatedAt: "2022-07-04T00:55:09.000Z",
-        User: {
-          id: 1,
-          name: "root",
-          email: "root@example.com",
-          password:
-            "$2a$10$mnvbkPzs2c29EEhgYJRLdOmutjcjLVYFhGQg5Lt1R8DPTD9as5Gsi",
-          isAdmin: true,
-          image: null,
-          createdAt: "2022-07-04T00:55:09.000Z",
-          updatedAt: "2022-07-04T00:55:09.000Z",
-        },
-      },
-      {
-        id: 2,
-        text: "In et error eius ut neque.",
-        UserId: 3,
-        RestaurantId: 2,
-        createdAt: "2022-07-04T00:55:09.000Z",
-        updatedAt: "2022-07-04T00:55:09.000Z",
-        User: {
-          id: 3,
-          name: "user2",
-          email: "user2@example.com",
-          password:
-            "$2a$10$3ZhJowb82ehqktuOG3O7UOHqFjlmzSFDjbkr5x.xPjwL72L6gfzeO",
-          isAdmin: false,
-          image: null,
-          createdAt: "2022-07-04T00:55:09.000Z",
-          updatedAt: "2022-07-04T00:55:09.000Z",
-        },
-      },
-      {
-        id: 52,
-        text: "Itaque quo impedit nesciunt aut ipsum ipsa.",
-        UserId: 3,
-        RestaurantId: 2,
-        createdAt: "2022-07-04T00:55:09.000Z",
-        updatedAt: "2022-07-04T00:55:09.000Z",
-        User: {
-          id: 3,
-          name: "user2",
-          email: "user2@example.com",
-          password:
-            "$2a$10$3ZhJowb82ehqktuOG3O7UOHqFjlmzSFDjbkr5x.xPjwL72L6gfzeO",
-          isAdmin: false,
-          image: null,
-          createdAt: "2022-07-04T00:55:09.000Z",
-          updatedAt: "2022-07-04T00:55:09.000Z",
-        },
-      },
-    ],
-  },
-};
+import restaurantsAPI from "./../apis/restaurants";
+import { Toast } from "./../utils/helpers";
 
 export default {
   name: "RestaurantDashboard",
-  components: {
-    NavTabs,
-  },
+  components: {},
   data() {
     return {
-      restaurant: {},
+      restaurant: {
+        id: -1,
+        name: "",
+        categoryName: "",
+        commentsLength: 0,
+        viewCounts: 0,
+      },
     };
   },
   created() {
-    this.fetchRestaurant();
+    const { id: restaurantId } = this.$route.params;
+    this.fetchRestaurant(restaurantId);
+  },
+  beforeRouteUpdate(to, from, next) {
+    const { id: restaurantId } = to.params; //{id: '1'}
+    console.log(to.params);
+    this.fetchRestaurant(restaurantId);
+    next();
   },
   methods: {
-    fetchRestaurant() {
-      this.restaurant = dummyData.restaurant;
+    async fetchRestaurant(restaurantId) {
+      try {
+        const { data } = await restaurantsAPI.getRestaurant({ restaurantId });
+
+        // 檢驗
+        if (data.status === "error") {
+          throw new Error(data.message);
+        }
+
+        const { id, name, Category, Comments, viewCounts } = data.restaurant;
+        this.restaurant = {
+          ...this.restaurant,
+          id,
+          name,
+          categoryName: Category ? Category.name : "未分類",
+          commentsLength: Comments.length,
+          viewCounts,
+        };
+      } catch (error) {
+        console.error(error.message);
+        Toast.fire({
+          icon: "error",
+          title: "無法載入餐廳資料，請稍後再試",
+        });
+      }
     },
   },
 };
