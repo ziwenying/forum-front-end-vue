@@ -3,18 +3,21 @@
     <NavTabs />
     <h1>餐廳描述頁</h1>
     <!-- 餐廳資訊頁 RestaurantDetail -->
-    <RestaurantDetail :initial-restaurant="restaurant" />
-    <hr />
-    <!-- 餐廳評論 RestaurantComments -->
-    <RestaurantComments
-      :restaurant-comments="restaurantComments"
-      @after-delete-comment="afterDeleteComment"
-    />
-    <!-- 新增評論 CreateComment -->
-    <CreateComment
-      :restaurant-id="restaurant.id"
-      @after-create-comment="afterCreateComment"
-    />
+    <Spinner v-if="isLoading" />
+    <template>
+      <RestaurantDetail :initial-restaurant="restaurant" />
+      <hr />
+      <!-- 餐廳評論 RestaurantComments -->
+      <RestaurantComments
+        :restaurant-comments="restaurantComments"
+        @after-delete-comment="afterDeleteComment"
+      />
+      <!-- 新增評論 CreateComment -->
+      <CreateComment
+        :restaurant-id="restaurant.id"
+        @after-create-comment="afterCreateComment"
+      />
+    </template>
   </div>
 </template>
 
@@ -23,6 +26,7 @@ import NavTabs from "./../components/NavTabs.vue";
 import RestaurantDetail from "./../components/RestaurantDetail.vue";
 import RestaurantComments from "./../components/RestaurantComments.vue";
 import CreateComment from "./../components/CreateComment .vue";
+import Spinner from "./../components/Spinner.vue";
 
 import restaurantsAPI from "./../apis/restaurants";
 import { Toast } from "./../utils/helpers";
@@ -35,6 +39,7 @@ export default {
     RestaurantDetail,
     RestaurantComments,
     CreateComment,
+    Spinner,
   },
   data() {
     return {
@@ -51,6 +56,7 @@ export default {
         isLiked: false,
       },
       restaurantComments: [],
+      isLoading: true,
     };
   },
   computed: {
@@ -70,6 +76,7 @@ export default {
   methods: {
     async fetchRestaurant(restaurantId) {
       try {
+        this.isLoading = true;
         const response = await restaurantsAPI.getRestaurant({ restaurantId });
 
         // 檢驗
@@ -92,7 +99,9 @@ export default {
           isLiked: data.isLiked,
         };
         this.restaurantComments = data.restaurant.Comments;
+        this.isLoading = false;
       } catch (error) {
+        this.isLoading = false;
         Toast.fire({
           icon: "error",
           title: "無法取得餐廳資料，請稍後再試",

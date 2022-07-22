@@ -6,7 +6,7 @@
         {{ restaurant.categoryName }}
       </span>
     </div>
-
+    <Spinner v-if="isLoading" />
     <hr />
 
     <ul>
@@ -23,10 +23,13 @@
 <script>
 import restaurantsAPI from "./../apis/restaurants";
 import { Toast } from "./../utils/helpers";
+import Spinner from "./../components/Spinner";
 
 export default {
   name: "RestaurantDashboard",
-  components: {},
+  components: {
+    Spinner,
+  },
   data() {
     return {
       restaurant: {
@@ -51,6 +54,7 @@ export default {
   methods: {
     async fetchRestaurant(restaurantId) {
       try {
+        this.isLoading = true;
         const { data } = await restaurantsAPI.getRestaurant({ restaurantId });
 
         // 檢驗
@@ -67,7 +71,9 @@ export default {
           commentsLength: Comments.length,
           viewCounts,
         };
+        this.isLoading = false;
       } catch (error) {
+        this.isLoading = false;
         console.error(error.message);
         Toast.fire({
           icon: "error",

@@ -24,7 +24,8 @@
         </div>
       </div>
     </form>
-    <table class="table">
+    <Spinner v-if="isLoading" />
+    <table v-else class="table">
       <thead class="thead-dark">
         <tr>
           <th scope="col" width="60">#</th>
@@ -92,11 +93,13 @@
 import AdminNav from "./../components/AdminNav.vue";
 import adminAPI from "./../apis/admin";
 import { Toast } from "./../utils/helpers";
+import Spinner from "./../components/Spinner.vue";
 
 export default {
   name: "AdminCategories",
   components: {
     AdminNav,
+    Spinner,
   },
 
   data() {
@@ -104,6 +107,7 @@ export default {
       newCategoryName: "",
       categories: [],
       isProcessing: false,
+      isLoading: true,
     };
   },
   created() {
@@ -112,6 +116,7 @@ export default {
   methods: {
     async fetchCategories() {
       try {
+        this.isLoading = true;
         const response = await adminAPI.categories.get();
 
         // 檢測
@@ -125,7 +130,9 @@ export default {
           isEditing: false,
           nameCached: "",
         }));
+        this.isLoading = false;
       } catch (error) {
+        this.isLoading = false;
         Toast.fire({
           icon: "error",
           title: "無法載入餐廳分類，請稍後再試",
